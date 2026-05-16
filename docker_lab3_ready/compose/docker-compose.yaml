@@ -1,0 +1,53 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq-standalone-lab3
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    restart: unless-stopped
+
+  user-service:
+    build:
+      context: ..
+      dockerfile: Dockerfile.producer
+    image: lab3-user-service:latest
+    environment:
+      RABBIT_HOST: rabbitmq
+      RABBIT_PORT: 5672
+      RABBIT_USER: guest
+      RABBIT_PASS: guest
+      USER_EXCHANGE: user.exchange
+      USER_ROUTING_KEY: user.created
+      SERVER_PORT: 8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      - rabbitmq
+    restart: unless-stopped
+
+  notification-service:
+    build:
+      context: ..
+      dockerfile: Dockerfile.consumer
+    image: lab3-notification-service:latest
+    environment:
+      RABBIT_HOST: rabbitmq
+      RABBIT_PORT: 5672
+      RABBIT_USER: guest
+      RABBIT_PASS: guest
+      USER_EXCHANGE: user.exchange
+      USER_QUEUE: user.events
+      USER_BINDING_KEY: user.#
+    depends_on:
+      - rabbitmq
+    restart: unless-stopped
+
+volumes:
+  rabbitmq-data:
+    driver: local
