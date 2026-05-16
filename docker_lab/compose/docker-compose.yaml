@@ -1,0 +1,31 @@
+services:
+  api-demo:
+    image: novastore/lab1:latest
+    environment:
+      SERVER_PORT: "8080"
+      DB_HOST: "postgres"
+      DB_PORT: "5432"
+      DB_NAME: "default"
+      DB_USER: "postgres"
+      DB_PASSWORD: "postgres"
+    ports:
+      - "8080:8080"
+    restart: always
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:13.3
+    environment:
+      POSTGRES_DB: "default"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    ports:
+      - "8001:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: always
+
+volumes:
+  postgres-data:
