@@ -1,0 +1,49 @@
+services:
+  api-demo:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: lab2-keydb-cache:latest
+    environment:
+      SERVER_PORT: "8080"
+      DB_HOST: "postgres"
+      DB_PORT: "5432"
+      DB_NAME: "lab2"
+      DB_USER: "postgres"
+      DB_PASSWORD: "postgres"
+      REDIS_HOST: "keydb"
+      REDIS_PORT: "6379"
+      CACHE_TTL: "60"
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - keydb
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:13.3
+    environment:
+      POSTGRES_DB: "lab2"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+      PGDATA: "/var/lib/postgresql/data/pgdata"
+    ports:
+      - "8001:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  keydb:
+    image: eqalpha/keydb:x86_64_v5.3.3
+    container_name: keydb
+    command: "keydb-server /etc/keydb/redis.conf --server-threads 2"
+    ports:
+      - "6379:6379"
+    volumes:
+      - keydb-data:/data
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
+  keydb-data:
